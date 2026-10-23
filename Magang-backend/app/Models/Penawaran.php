@@ -14,6 +14,7 @@ class Penawaran extends Model
     protected $fillable = [
         'marketing_id',
         'customer_id',
+        'chat_session_id',
         'produk_id',
         'layanan_id',
         'judul',
@@ -32,6 +33,16 @@ class Penawaran extends Model
     public function proyek()
     {
         return $this->hasOne(Proyek::class, 'penawaran_id');
+    }
+
+    public function chatSession()
+    {
+        return $this->belongsTo(ChatSession::class, 'chat_session_id');
+    }
+
+    public function negosiasi()
+    {
+        return $this->hasOne(Negosiasi::class, 'penawaran_id');
     }
 
     public function marketing()

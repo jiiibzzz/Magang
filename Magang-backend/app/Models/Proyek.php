@@ -14,6 +14,7 @@ class Proyek extends Model
     protected $fillable = [
         'penawaran_id',
         'chat_session_id',
+        'negosiasi_id',
         'customer_id',
         'layanan_id',
         'nama_proyek',
@@ -45,6 +46,11 @@ class Proyek extends Model
     public function chatSession()
     {
         return $this->belongsTo(ChatSession::class, 'chat_session_id');
+    }
+
+    public function negosiasi()
+    {
+        return $this->belongsTo(Negosiasi::class, 'negosiasi_id');
     }
 
     public function layanan()

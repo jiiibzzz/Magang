@@ -53,4 +53,14 @@ class ChatSession extends Model
     {
         return $this->hasMany(Proyek::class, 'chat_session_id');
     }
+
+    public function penawarans()
+    {
+        return $this->hasMany(Penawaran::class, 'chat_session_id');
+    }
+
+    public function negosiasis()
+    {
+        return $this->hasMany(Negosiasi::class, 'chat_session_id');
+    }
 }
