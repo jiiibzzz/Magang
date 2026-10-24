@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
 import Toast from '../../components/Toast'
 
 export default function Penawaran() {
   const { user, hasPermission } = useAuth()
+  const navigate = useNavigate()
   const isMarketing = hasPermission('kelola_penawaran')
   const isCustomer = user?.roles?.some(role => role.name === 'customer')
 
@@ -160,15 +162,24 @@ export default function Penawaran() {
     }
   }
 
+  // "diterima" berarti customer setuju LANJUT KE PEMBAHASAN PROYEK (Sistem Negosiasi),
+  // bukan menyetujui harga. Harga final ditentukan lewat negosiasi.
   const handleUpdateStatus = async (id, status) => {
-    if (!window.confirm(`Apakah Anda yakin ingin ${status === 'diterima' ? 'menyetujui' : 'menolak'} penawaran ini?`)) return
+    const pesanKonfirmasi = status === 'diterima'
+      ? 'Lanjut ke pembahasan proyek?\n\nHarga pada penawaran ini masih perkiraan. Harga final akan ditentukan bersama marketing melalui negosiasi.'
+      : 'Apakah Anda yakin ingin menolak penawaran ini?'
+    if (!window.confirm(pesanKonfirmasi)) return
     try {
-      await api.put(`/penawaran/${id}/status`, { status })
-      showToastMsg(`Penawaran telah ${status === 'diterima' ? 'disetujui' : 'ditolak'}.`)
+      const res = await api.put(`/penawaran/${id}/status`, { status })
+      if (status === 'diterima' && res.data?.negosiasi?.id) {
+        navigate(`/admin/negosiasi/${res.data.negosiasi.id}`)
+        return
+      }
+      showToastMsg('Penawaran telah ditolak.')
       fetchPenawarans()
     } catch (err) {
       console.error(err)
-      showToastMsg('Gagal memproses penawaran.', 'error')
+      showToastMsg(err.response?.data?.message || 'Gagal memproses penawaran.', 'error')
     }
   }
 
@@ -180,7 +191,7 @@ export default function Penawaran() {
       fetchPenawarans()
     } catch (err) {
       console.error(err)
-      showToastMsg('Gagal menghapus penawaran.', 'error')
+      showToastMsg(err.response?.data?.message || 'Gagal menghapus penawaran.', 'error')
     }
   }
 
@@ -279,8 +290,9 @@ export default function Penawaran() {
                             <button
                               onClick={() => handleUpdateStatus(pen.id, 'diterima')}
                               className="btn btn-xs bg-emerald-600 hover:bg-emerald-700 border-none text-white font-bold rounded-lg px-3 shadow-sm"
+                              title="Lanjut membahas kebutuhan dan harga proyek bersama marketing"
                             >
-                              Terima
+                              Lanjut ke Pembahasan
                             </button>
                             <button
                               onClick={() => handleUpdateStatus(pen.id, 'ditolak')}
@@ -312,7 +324,15 @@ export default function Penawaran() {
                             </button>
                           </div>
                         )}
-                        {(!isMarketing && (!isCustomer || pen.status !== 'pending')) && (
+                        {pen.negosiasi && (
+                          <Link
+                            to={`/admin/negosiasi/${pen.negosiasi.id}`}
+                            className="btn btn-xs btn-ghost text-primary font-bold hover:bg-primary/10"
+                          >
+                            Lihat Negosiasi &rarr;
+                          </Link>
+                        )}
+                        {(!isMarketing && !pen.negosiasi && (!isCustomer || pen.status !== 'pending')) && (
                           <span className="text-xs text-base-content/40">-</span>
                         )}
                       </div>

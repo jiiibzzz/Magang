@@ -17,7 +17,7 @@ class PenawaranController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $query = Penawaran::with(['marketing', 'customer', 'produk', 'layanan']);
+        $query = Penawaran::with(['marketing', 'customer', 'produk', 'layanan', 'negosiasi:id,penawaran_id,status,tahap']);
 
         if ($user->hasRole('customer')) {
             $query->where('customer_id', $user->id);

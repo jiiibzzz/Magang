@@ -36,6 +36,8 @@ const Produk = lazy(() => import('./pages/admin/Produk'))
 const ChatCenter = lazy(() => import('./pages/admin/ChatCenter'))
 const Penawaran = lazy(() => import('./pages/admin/Penawaran'))
 const Proyek = lazy(() => import('./pages/admin/Proyek'))
+const Negosiasi = lazy(() => import('./pages/admin/Negosiasi'))
+const NegosiasiDetail = lazy(() => import('./pages/admin/NegosiasiDetail'))
 const ClientLogo = lazy(() => import('./pages/admin/ClientLogo'))
 const Keunggulan = lazy(() => import('./pages/admin/Keunggulan'))
 const RiwayatTransaksi = lazy(() => import('./pages/admin/RiwayatTransaksi'))
@@ -89,6 +91,8 @@ function App() {
               <Route path="produk" element={<Produk />} />
               <Route path="chat" element={<ChatCenter />} />
               <Route path="penawaran" element={<Penawaran />} />
+              <Route path="negosiasi" element={<Negosiasi />} />
+              <Route path="negosiasi/:id" element={<NegosiasiDetail />} />
               <Route path="proyek" element={<Proyek />} />
               <Route path="riwayat-transaksi" element={<RiwayatTransaksi />} />
               <Route path="rfm" element={<RfmAnalysis />} />
@@ -106,4 +110,4 @@ function App() {
   )
 }
 
-export default App
+export default App

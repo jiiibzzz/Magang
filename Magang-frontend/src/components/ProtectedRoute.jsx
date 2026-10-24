@@ -46,7 +46,7 @@ export default function ProtectedRoute({ children }) {
   }
 
   // Cek akses penawaran & proyek (hanya Marketing & Customer)
-  if (path.startsWith('/admin/penawaran') || path.startsWith('/admin/proyek')) {
+  if (path.startsWith('/admin/penawaran') || path.startsWith('/admin/proyek') || path.startsWith('/admin/negosiasi')) {
     const isMarketing = user.roles?.some(role => role.name === 'marketing')
     const isCustomer = user.roles?.some(role => role.name === 'customer')
     if (!isMarketing && !isCustomer) {
