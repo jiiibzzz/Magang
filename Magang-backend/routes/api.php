@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ProdukController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\PenawaranController;
+use App\Http\Controllers\Api\NegosiasiController;
 use App\Http\Controllers\Api\ProyekController;
 use App\Http\Controllers\Api\RiwayatTransaksiController;
 use App\Http\Controllers\Api\RfmController;
@@ -170,6 +171,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/proyek/{id}', [ProyekController::class, 'destroy'])->middleware('permission:kelola_proyek');
     Route::post('/proyek/{id}/dokumentasi', [ProyekController::class, 'uploadDokumentasi']);
     Route::delete('/proyek/{id}/dokumentasi/{dokumenId}', [ProyekController::class, 'deleteDokumentasi']);
+
+    // Sistem Negosiasi
+    // Aksi customer (menjawab, membatalkan) diperiksa di dalam controller,
+    // aksi marketing dijaga permission kelola_negosiasi.
+    Route::get('/negosiasi', [NegosiasiController::class, 'index']);
+    Route::get('/negosiasi/{id}', [NegosiasiController::class, 'show']);
+    Route::post('/negosiasi/{id}/pertanyaan', [NegosiasiController::class, 'kirimPertanyaan'])->middleware('permission:kelola_negosiasi');
+    Route::post('/negosiasi/{id}/jawaban', [NegosiasiController::class, 'kirimJawaban']);
+    Route::post('/negosiasi/{id}/kebutuhan-lengkap', [NegosiasiController::class, 'kebutuhanLengkap'])->middleware('permission:kelola_negosiasi');
+    Route::post('/negosiasi/{id}/batalkan', [NegosiasiController::class, 'batalkan']);
 
     // Chat & Collaboration Routes (Customer & Marketing)
     Route::post('/chats/followup-from-form', [ChatController::class, 'followupFromForm']); // Follow-up dari Pesan Formulir Kontak

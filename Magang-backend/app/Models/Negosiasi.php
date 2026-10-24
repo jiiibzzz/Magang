@@ -161,6 +161,6 @@ class Negosiasi extends Model
     /** Apakah user ini pihak dalam negosiasi (marketing atau customer-nya). */
     public function melibatkan(User $user): bool
     {
-        return $user->id === $this->customer_id || $user->id === $this->marketing_id;
+        return in_array((int) $user->id, [(int) $this->customer_id, (int) $this->marketing_id], true);
     }
 }

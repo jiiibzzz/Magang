@@ -36,6 +36,7 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'kelola_chat', 'modul' => 'kelola_chat', 'panel' => 'admin'],
             ['name' => 'kelola_penawaran', 'modul' => 'kelola_penawaran', 'panel' => 'admin'],
             ['name' => 'kelola_proyek', 'modul' => 'kelola_proyek', 'panel' => 'admin'],
+            ['name' => 'kelola_negosiasi', 'modul' => 'kelola_negosiasi', 'panel' => 'admin'],
         ];
 
         foreach ($permissions as $perm) {
@@ -53,14 +54,14 @@ class RolePermissionSeeder extends Seeder
         $marketingRole = Role::findOrCreate('marketing', 'web');
         $customerRole = Role::findOrCreate('customer', 'web');
 
-        // Admin mendapatkan semua permission KECUALI kelola_chat, kelola_penawaran, dan kelola_proyek
-        $adminPermissions = Permission::whereNotIn('name', ['kelola_chat', 'kelola_penawaran', 'kelola_proyek'])->get();
+        // Admin mendapatkan semua permission KECUALI kelola_chat, kelola_penawaran, kelola_proyek, dan kelola_negosiasi
+        $adminPermissions = Permission::whereNotIn('name', ['kelola_chat', 'kelola_penawaran', 'kelola_proyek', 'kelola_negosiasi'])->get();
         $adminRole->syncPermissions($adminPermissions);
 
         $marketingRole->syncPermissions(Permission::whereIn('name', [
             'users.view', 'roles.view', 'permissions.view',
             'kelola_artikel', 'kelola_testimoni', 'kelola_anggota_tim', 'kelola_faq', 'kelola_layanan', 'kelola_produk', 'kelola_chat',
-            'kelola_penawaran', 'kelola_proyek', 'kelola_pesan_kontak'
+            'kelola_penawaran', 'kelola_proyek', 'kelola_pesan_kontak', 'kelola_negosiasi'
         ])->get());
     }
 }

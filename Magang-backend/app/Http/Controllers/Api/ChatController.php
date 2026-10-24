@@ -207,7 +207,7 @@ class ChatController extends Controller
         $session = ChatSession::findOrFail($id);
 
         $request->validate([
-            'status' => 'required|in:Ketertarikan,Ditindaklanjuti,Penawaran,Deal,Arsip',
+            'status' => 'required|in:Ketertarikan,Ditindaklanjuti,Penawaran,Negosiasi,Deal,Arsip',
         ]);
 
         $oldStatus = $session->status;
