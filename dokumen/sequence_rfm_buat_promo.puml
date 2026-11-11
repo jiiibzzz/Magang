@@ -1,0 +1,16 @@
+@startuml
+actor Marketing
+boundary View
+control Controller
+entity Model
+database Database
+Marketing -> View : Memilih customer via checkbox atau kartu segment
+Marketing -> View : Klik tombol "Buat Promo"
+alt Minimal 1 customer dipilih
+ View -> View : Menyimpan customer terpilih ke session storage
+ View -> View : Navigate ke halaman Promo Campaign
+ View --> Marketing : Menampilkan halaman Promo Campaign
+else Tidak ada customer dipilih
+ View --> Marketing : Menampilkan pesan error "Pilih minimal 1 customer"
+end
+@enduml

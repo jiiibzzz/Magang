@@ -82,7 +82,7 @@ class RiwayatTransaksiController extends Controller
                 'layanan' => $pr->layanan,
                 'marketing' => $pr->chatSession?->marketing,
                 'customer' => $pr->customer,
-                'harga' => null, // Berdasarkan kontrak / kesepakatan
+                'harga' => $pr->harga_kontrak, // Harga kontrak yang sudah deal
                 'tanggal_deal' => $pr->tanggal_selesai ?: $pr->updated_at,
                 'status_proyek' => $pr->status_proyek,
                 'proyek' => $pr,
@@ -180,7 +180,7 @@ class RiwayatTransaksiController extends Controller
                 'layanan' => $pr->layanan,
                 'judul' => $pr->nama_proyek,
                 'deskripsi' => $pr->deskripsi_kebutuhan,
-                'harga' => null,
+                'harga' => $pr->harga_kontrak,
                 'tanggal_deal' => $pr->tanggal_selesai ?: $pr->updated_at,
                 'status_proyek' => $pr->status_proyek,
                 'proyek' => $pr,
@@ -202,7 +202,7 @@ class RiwayatTransaksiController extends Controller
         }
 
         // Ringkasan Summary
-        $totalNilai = $dealItems->sum('harga');
+        $totalNilai = $allMerged->whereNotNull('harga')->sum('harga');
         $distinctCustomers = $allMerged->pluck('customer_id')->unique()->count();
         $summary = [
             'total_transaksi' => $allMerged->count(),

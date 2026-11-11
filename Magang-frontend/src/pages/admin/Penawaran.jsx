@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
 import Toast from '../../components/Toast'
+import { formatRupiah } from '../../utils/format'
 
 export default function Penawaran() {
   const { user, hasPermission } = useAuth()
   const isMarketing = hasPermission('kelola_penawaran')
   const isCustomer = user?.roles?.some(role => role.name === 'customer')
+  const [searchParams] = useSearchParams()
+  const prefillProyekId = searchParams.get('proyek_id') || ''
+  const prefillCustomerId = searchParams.get('customer_id') || ''
 
   const [penawarans, setPenawarans] = useState([])
   const [loading, setLoading] = useState(true)
@@ -18,10 +23,12 @@ export default function Penawaran() {
   const [showModal, setShowModal] = useState(false)
   const [editId, setEditId] = useState(null)
   const [customerId, setCustomerId] = useState('')
+  const [proyekId, setProyekId] = useState('')
   const [produkId, setProdukId] = useState('')
   const [layananId, setLayananId] = useState('')
   const [judul, setJudul] = useState('')
   const [deskripsi, setDeskripsi] = useState('')
+  const [harga, setHarga] = useState('')
   const [brosur, setBrosur] = useState(null)
   const [brosurPreviewName, setBrosurPreviewName] = useState('')
 
@@ -94,13 +101,36 @@ export default function Penawaran() {
     }
   }, [isMarketing])
 
+  // Prefill dari navigasi Proyek (negosiasi → buat penawaran)
+  useEffect(() => {
+    if (isMarketing && prefillProyekId && prefillCustomerId) {
+      // Pastikan options ter-fetch dulu jika belum ada
+      if (customers.length === 0) {
+        fetchOptions()
+      }
+      setEditId(null)
+      setCustomerId(prefillCustomerId)
+      setProyekId(prefillProyekId)
+      setProdukId('')
+      setLayananId('')
+      setJudul('')
+      setDeskripsi('')
+      setHarga('')
+      setBrosur(null)
+      setBrosurPreviewName('')
+      setShowModal(true)
+    }
+  }, [isMarketing, prefillProyekId, prefillCustomerId])
+
   const openCreateModal = () => {
     setEditId(null)
     setCustomerId('')
+    setProyekId('')
     setProdukId('')
     setLayananId('')
     setJudul('')
     setDeskripsi('')
+    setHarga('')
     setBrosur(null)
     setBrosurPreviewName('')
     setShowModal(true)
@@ -109,10 +139,12 @@ export default function Penawaran() {
   const openEditModal = (pen) => {
     setEditId(pen.id)
     setCustomerId(pen.customer_id)
+    setProyekId(pen.proyek_id || '')
     setProdukId(pen.produk_id || '')
     setLayananId(pen.layanan_id || '')
     setJudul(pen.judul)
     setDeskripsi(pen.deskripsi)
+    setHarga(pen.harga ?? '')
     setBrosur(null)
     setBrosurPreviewName(pen.brosur_path ? 'Brosur sudah terunggah' : '')
     setShowModal(true)
@@ -131,10 +163,12 @@ export default function Penawaran() {
 
     const formData = new FormData()
     formData.append('customer_id', customerId)
+    if (proyekId) formData.append('proyek_id', proyekId)
     if (produkId) formData.append('produk_id', produkId)
     if (layananId) formData.append('layanan_id', layananId)
     formData.append('judul', judul)
     formData.append('deskripsi', deskripsi)
+    if (harga !== '' && harga !== null) formData.append('harga', harga)
     if (brosur) {
       formData.append('brosur', brosur)
     }
@@ -168,7 +202,7 @@ export default function Penawaran() {
       fetchPenawarans()
     } catch (err) {
       console.error(err)
-      showToastMsg('Gagal memproses penawaran.', 'error')
+      showToastMsg(err.response?.data?.message || 'Gagal memproses penawaran.', 'error')
     }
   }
 
@@ -225,6 +259,7 @@ export default function Penawaran() {
               <tr className="bg-base-200/50 text-secondary border-b border-base-200">
                 <th className="font-bold text-xs">Proposal / Judul</th>
                 <th className="font-bold text-xs">Customer</th>
+                <th className="font-bold text-xs text-right">Harga</th>
                 <th className="font-bold text-xs text-center">Status</th>
                 <th className="font-bold text-xs text-center">Dokumen</th>
                 <th className="font-bold text-xs text-center">Aksi</th>
@@ -233,13 +268,13 @@ export default function Penawaran() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8">
+                  <td colSpan={6} className="text-center py-8">
                     <span className="loading loading-spinner loading-md text-primary"></span>
                   </td>
                 </tr>
               ) : penawarans.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-base-content/40 font-medium">Belum ada penawaran.</td>
+                  <td colSpan={6} className="text-center py-8 text-base-content/40 font-medium">Belum ada penawaran.</td>
                 </tr>
               ) : (
                 penawarans.map((pen) => (
@@ -249,6 +284,7 @@ export default function Penawaran() {
                       <div className="text-[10px] text-base-content/50 font-normal truncate max-w-[200px]">{pen.deskripsi}</div>
                     </td>
                     <td className="text-xs">{pen.customer?.name}</td>
+                    <td className="text-right font-bold text-sm text-primary">{formatRupiah(pen.harga)}</td>
                     <td className="text-center">
                       <span className={`badge ${
                         pen.status === 'diterima' ? 'bg-emerald-500 text-white' :
@@ -338,16 +374,27 @@ export default function Penawaran() {
       {showModal && (
         <div className="modal modal-open z-50">
           <div className="modal-box rounded-3xl max-w-lg border border-base-300 max-h-[90vh] overflow-y-auto">
-            <h3 className="font-extrabold text-lg text-secondary border-b border-base-200 pb-3">
-              {editId ? 'Edit Proposal Penawaran' : 'Buat Penawaran Baru'}
+            <h3 className="font-extrabold text-lg text-secondary border-b border-base-200 pb-3 flex items-center justify-between">
+              <span>{editId ? 'Edit Proposal Penawaran' : 'Buat Penawaran Baru'}</span>
+              {proyekId && (
+                <span className="badge badge-primary badge-outline text-[10px] font-bold">
+                  Terkait Proyek #{proyekId}
+                </span>
+              )}
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4 pt-4">
               <div className="form-control">
-                <label className="label py-1"><span className="text-xs font-bold text-secondary">Customer <span className="text-error">*</span></span></label>
+                <label className="label py-1">
+                  <span className="text-xs font-bold text-secondary">Customer <span className="text-error">*</span></span>
+                  {proyekId && (
+                    <span className="text-[10px] text-primary font-bold">Terkunci ke Proyek Terkait</span>
+                  )}
+                </label>
                 <select
-                  className="select select-bordered rounded-xl text-sm w-full"
+                  className={`select select-bordered rounded-xl text-sm w-full ${proyekId ? 'bg-base-200 cursor-not-allowed' : ''}`}
                   value={customerId}
                   onChange={(e) => setCustomerId(e.target.value)}
+                  disabled={Boolean(proyekId)}
                   required
                 >
                   <option value="">Pilih Customer</option>
@@ -406,6 +453,22 @@ export default function Penawaran() {
                   placeholder="Tuliskan spesifikasi detail penawaran..."
                   required
                 />
+              </div>
+
+              <div className="form-control">
+                <label className="label py-1"><span className="text-xs font-bold text-secondary">Harga Penawaran (Rp)</span></label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1000"
+                  className="input input-bordered rounded-xl text-sm w-full"
+                  value={harga}
+                  onChange={(e) => setHarga(e.target.value)}
+                  placeholder="Contoh: 15000000"
+                />
+                {harga !== '' && (
+                  <p className="text-xs text-primary font-semibold mt-1">{formatRupiah(harga)}</p>
+                )}
               </div>
 
               <div className="form-control">

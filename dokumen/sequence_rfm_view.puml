@@ -1,0 +1,19 @@
+@startuml
+actor Marketing
+boundary View
+control Controller
+entity Model
+database Database
+Marketing -> View : Buka menu Analisis RFM
+View -> Controller : GET /admin/rfm
+Controller -> Model : daftarRfm()
+Model -> Database : SELECT penawaran diterima dan proyek selesai
+Database --> Model : data transaksi
+Model -> Model : Hitung skor R/F/M dan tentukan segment
+Model --> Controller : data pelanggan RFM
+Controller --> View : 200 daftar customer dan ringkasan segment
+View --> Marketing : Menampilkan ringkasan segment dan tabel customer
+Marketing -> View : Memasukkan kata kunci atau memilih filter segment
+View -> View : Menyaring data client-side
+View --> Marketing : Menampilkan hasil filter dan pencarian
+@enduml

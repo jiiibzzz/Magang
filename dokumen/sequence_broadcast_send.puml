@@ -1,0 +1,23 @@
+@startuml
+actor Marketing
+boundary View
+control Controller
+entity Model
+database Database
+Marketing -> View : Klik tombol "Kirim" pada broadcast
+View --> Marketing : Menampilkan dialog konfirmasi
+Marketing -> View : Mengonfirmasi pengiriman
+View -> Controller : POST /admin/broadcast-maintenance/{id}/send
+Controller -> Model : siapkanPenerima()
+Model -> Database : SELECT customer dengan nomor WA
+Database --> Model : daftar penerima
+Controller -> Controller : Loop kirim pesan via Fonnte
+alt Terkirim ke sebagian / semua penerima
+ Model -> Database : UPDATE total_penerima
+ Database --> Model : data tersimpan
+ Controller --> View : 200 terkirim ke X customer
+else Gagal terkirim ke semua
+ Controller --> View : 422 pesan error
+end
+View --> Marketing : Menampilkan hasil pengiriman
+@enduml

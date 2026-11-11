@@ -1,0 +1,54 @@
+@startuml
+skinparam dpi 180
+skinparam activityMinimumWidth 160
+skinparam activityPadding 18
+skinparam nodesep 100
+skinparam ranksep 160
+skinparam defaultFontSize 13
+skinparam activityFontSize 13
+skinparam activityBorderThickness 1
+skinparam ArrowThickness 2
+skinparam SwimlaneBorderColor #000000
+skinparam SwimlaneBorderThickness 2
+skinparam partitionBorderColor #000000
+skinparam partitionBorderThickness 2
+skinparam partitionBackgroundColor #FFFFFF
+skinparam BackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityBorderColor #000000
+skinparam ActivityStartColor #000000
+skinparam ActivityEndColor #000000
+skinparam ArrowColor #000000
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #000000
+skinparam ActivityDiamondFontSize 13
+skinparam ActivityDiamondWidth 120
+skinparam ActivityDiamondHeight 160
+skinparam SwimlaneTitleBackgroundColor #FFFFFF
+skinparam SwimlaneTitleFontColor #000000
+
+title Aktivitas: Melihat Detail Promo Campaign
+
+|Pengguna|
+start
+:Klik tombol "Detail"
+pada campaign;
+
+|Sistem|
+:Memuat data campaign
+beserta log pengiriman;
+:Menampilkan modal detail
+judul, pesan, status,
+dan total penerima;
+if (Campaign pernah dikirim?) then (Ya)
+  |Pengguna|
+  :Melihat log pengiriman
+  per customer;
+  :Menutup modal detail;
+  stop
+else (Belum)
+  |Pengguna|
+  :Menutup modal detail;
+  stop
+endif
+@enduml

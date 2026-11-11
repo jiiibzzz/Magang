@@ -27,6 +27,14 @@ use App\Http\Controllers\Api\RiwayatTransaksiController;
 use App\Http\Controllers\Api\RfmController;
 use App\Http\Controllers\Api\PromoCampaignController;
 use App\Http\Controllers\Api\BroadcastMaintenanceController;
+use App\Http\Controllers\Api\Negosiasi\DokumenController;
+use App\Http\Controllers\Api\Negosiasi\JawabanController;
+use App\Http\Controllers\Api\Negosiasi\KesepakatanController;
+use App\Http\Controllers\Api\Negosiasi\NegosiasiController;
+use App\Http\Controllers\Api\Negosiasi\PenawaranController as NegosiasiPenawaranController;
+use App\Http\Controllers\Api\Negosiasi\PerubahanController;
+use App\Http\Controllers\Api\Negosiasi\PertanyaanController;
+use App\Http\Controllers\Api\Negosiasi\RancanganController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -168,8 +176,31 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/proyek/{id}/validasi', [ProyekController::class, 'validasi'])->middleware('permission:kelola_proyek');
     Route::put('/proyek/{id}', [ProyekController::class, 'update'])->middleware('permission:kelola_proyek');
     Route::delete('/proyek/{id}', [ProyekController::class, 'destroy'])->middleware('permission:kelola_proyek');
-    Route::post('/proyek/{id}/dokumentasi', [ProyekController::class, 'uploadDokumentasi']);
-    Route::delete('/proyek/{id}/dokumentasi/{dokumenId}', [ProyekController::class, 'deleteDokumentasi']);
+    Route::post('/proyek/{id}/dokumentasi', [ProyekController::class, 'uploadDokumentasi'])->middleware('permission:kelola_proyek');
+    Route::delete('/proyek/{id}/dokumentasi/{dokumenId}', [ProyekController::class, 'deleteDokumentasi'])->middleware('permission:kelola_proyek');
+
+    // Modul Negosiasi Proyek (SKPL Negosiasi)
+    Route::prefix('negosiasi')->group(function () {
+        Route::get('/', [NegosiasiController::class, 'index']);
+        Route::get('/{id}', [NegosiasiController::class, 'show']);
+
+        // Customer
+        Route::post('/{id}/jawaban', [JawabanController::class, 'simpan']);
+        Route::post('/{id}/penawaran-balik', [NegosiasiPenawaranController::class, 'storeBalik']);
+        Route::post('/{id}/perubahan', [PerubahanController::class, 'store']);
+        Route::post('/{id}/setujui', [KesepakatanController::class, 'setujui']);
+        Route::post('/{id}/batalkan', [NegosiasiController::class, 'batalkan']);
+
+        // Marketing
+        Route::middleware('permission:kelola_proyek')->group(function () {
+            Route::post('/{id}/pertanyaan', [PertanyaanController::class, 'store']);
+            Route::post('/{id}/periksa', [JawabanController::class, 'periksa']);
+            Route::post('/{id}/rancangan', [RancanganController::class, 'store']);
+            Route::post('/{id}/penawaran', [NegosiasiPenawaranController::class, 'store']);
+            Route::post('/{id}/penawaran/{versiId}/tinjau', [NegosiasiPenawaranController::class, 'tinjau']);
+            Route::get('/{id}/dokumen/{dokumenId}/unduh', [DokumenController::class, 'unduh']);
+        });
+    });
 
     // Chat & Collaboration Routes (Customer & Marketing)
     Route::post('/chats/followup-from-form', [ChatController::class, 'followupFromForm']); // Follow-up dari Pesan Formulir Kontak

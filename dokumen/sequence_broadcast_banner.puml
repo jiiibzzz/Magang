@@ -1,0 +1,22 @@
+@startuml
+actor Customer
+boundary View
+control Controller
+entity Model
+database Database
+Customer -> View : Membuka halaman dashboard
+View -> Controller : GET /broadcast-maintenance/active
+Controller -> Model : broadcastAktif()
+Model -> Database : SELECT broadcast aktif dan belum dibaca
+Database --> Model : data broadcast
+Model --> Controller : daftar broadcast aktif
+Controller --> View : 200 daftar broadcast aktif
+View --> Customer : Menampilkan banner broadcast di sidebar
+Customer -> View : Menutup banner
+View -> Controller : POST /broadcast-maintenance/{id}/read
+Controller -> Model : tandaiDibaca()
+Model -> Database : INSERT broadcast reads
+Database --> Model : catatan dibaca
+Controller --> View : 200 ditandai sudah dibaca
+View --> Customer : Menyembunyikan banner broadcast
+@enduml

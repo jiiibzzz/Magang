@@ -1,0 +1,68 @@
+@startuml
+skinparam dpi 180
+skinparam activityMinimumWidth 160
+skinparam activityPadding 18
+skinparam nodesep 100
+skinparam ranksep 160
+skinparam defaultFontSize 13
+skinparam activityFontSize 13
+skinparam activityBorderThickness 1
+skinparam ArrowThickness 2
+skinparam SwimlaneBorderColor #000000
+skinparam SwimlaneBorderThickness 2
+skinparam partitionBorderColor #000000
+skinparam partitionBorderThickness 2
+skinparam partitionBackgroundColor #FFFFFF
+skinparam BackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityBorderColor #000000
+skinparam ActivityStartColor #000000
+skinparam ActivityEndColor #000000
+skinparam ArrowColor #000000
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #000000
+skinparam ActivityDiamondFontSize 13
+skinparam ActivityDiamondWidth 120
+skinparam ActivityDiamondHeight 160
+skinparam SwimlaneTitleBackgroundColor #FFFFFF
+skinparam SwimlaneTitleFontColor #000000
+
+title Aktivitas: Melihat Riwayat Transaksi
+
+|Pengguna|
+start
+:Buka menu "Riwayat Transaksi";
+
+|Sistem|
+:Menampilkan halaman riwayat transaksi;
+
+|Pengguna|
+:Melihat daftar riwayat transaksi;
+
+|Sistem|
+if (Peran pengguna?) then (Marketing)
+  :Memuat semua data transaksi,
+  menampilkan ringkasan, filter,
+  tabel, dan Top 10 Customer;
+else (Customer)
+  :Memuat data transaksi milik sendiri,
+  menampilkan filter dan tabel;
+endif
+
+|Pengguna|
+:Melihat hasil riwayat transaksi;
+if (Ubah filter / halaman?) then (Ya)
+  :Mengubah filter atau halaman;
+  |Sistem|
+  :Memuat ulang data
+  dan menampilkan hasil terbaru;
+  |Pengguna|
+  :Melihat hasil
+  riwayat transaksi terbaru;
+  stop
+else (Tidak)
+  :Selesai melihat
+  riwayat transaksi;
+  stop
+endif
+@enduml

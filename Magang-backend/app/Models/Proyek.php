@@ -18,6 +18,9 @@ class Proyek extends Model
         'layanan_id',
         'nama_proyek',
         'deskripsi_kebutuhan',
+        'harga_kontrak',
+        'harga_tawaran',
+        'alasan_tawaran',
         'progress',
         'status_proyek',
         'alasan_penolakan',
@@ -30,6 +33,8 @@ class Proyek extends Model
     protected $casts = [
         'timeline' => 'array',
         'dokumentasi' => 'array',
+        'harga_kontrak' => 'decimal:2',
+        'harga_tawaran' => 'decimal:2',
     ];
 
     public function penawaran()
@@ -45,6 +50,11 @@ class Proyek extends Model
     public function chatSession()
     {
         return $this->belongsTo(ChatSession::class, 'chat_session_id');
+    }
+
+    public function sesiNegosiasi()
+    {
+        return $this->hasOne(SesiNegosiasi::class, 'proyek_id');
     }
 
     public function layanan()

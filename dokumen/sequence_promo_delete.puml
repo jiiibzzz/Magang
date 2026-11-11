@@ -1,0 +1,22 @@
+@startuml
+actor Marketing
+boundary View
+control Controller
+entity Model
+database Database
+Marketing -> View : Klik tombol "Hapus" pada campaign
+View --> Marketing : Menampilkan dialog konfirmasi
+Marketing -> View : Mengonfirmasi penghapusan
+View -> Controller : DELETE /admin/promo-campaigns/{id}
+Controller -> Model : hapusCampaign()
+Model -> Database : DELETE campaign dan dokumen
+Database --> Model : campaign terhapus
+Controller --> View : 200 campaign berhasil dihapus
+View --> Marketing : Menampilkan pesan sukses
+View -> Controller : GET /admin/promo-campaigns
+Controller -> Model : daftarCampaign()
+Model -> Database : SELECT daftar campaign
+Database --> Model : data campaign
+Controller --> View : 200 daftar campaign
+View --> Marketing : Menampilkan daftar campaign terbaru
+@enduml

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
 import Toast from '../../components/Toast'
+import { formatRupiah } from '../../utils/format'
 
 export default function RiwayatTransaksi() {
   const { user, hasPermission } = useAuth()
@@ -31,10 +32,11 @@ export default function RiwayatTransaksi() {
     setTimeout(() => setShowToast(false), 3000)
   }
 
-  const formatRupiah = (val) => {
-    if (val === null || val === undefined) return <span className="text-[11px] font-normal text-base-content/50 italic">Sesuai Kontrak</span>
-    if (val === 0) return 'Rp 0'
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val)
+  const renderHarga = (val) => {
+    if (val === null || val === undefined || val === '') {
+      return <span className="text-[11px] font-normal text-base-content/50 italic">Sesuai Kontrak</span>
+    }
+    return formatRupiah(val)
   }
 
   const formatTanggal = (val) => {
@@ -229,7 +231,7 @@ export default function RiwayatTransaksi() {
                       <div>{item.produk?.nama || '-'}</div>
                       <div className="text-[10px] text-base-content/50">{item.layanan?.title || ''}</div>
                     </td>
-                    <td className="text-right font-bold text-sm text-primary">{formatRupiah(item.harga)}</td>
+                    <td className="text-right font-bold text-sm text-primary">{renderHarga(item.harga)}</td>
                     <td className="text-center text-xs">{formatTanggal(item.tanggal_deal)}</td>
                     <td className="text-center">{statusProyekBadge(item.proyek, item.status_proyek)}</td>
                   </tr>

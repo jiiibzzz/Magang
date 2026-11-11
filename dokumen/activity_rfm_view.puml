@@ -1,0 +1,63 @@
+@startuml
+skinparam dpi 180
+skinparam activityMinimumWidth 160
+skinparam activityPadding 18
+skinparam nodesep 100
+skinparam ranksep 160
+skinparam defaultFontSize 13
+skinparam activityFontSize 13
+skinparam activityBorderThickness 1
+skinparam ArrowThickness 2
+skinparam SwimlaneBorderColor #000000
+skinparam SwimlaneBorderThickness 2
+skinparam partitionBorderColor #000000
+skinparam partitionBorderThickness 2
+skinparam partitionBackgroundColor #FFFFFF
+skinparam BackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityBorderColor #000000
+skinparam ActivityStartColor #000000
+skinparam ActivityEndColor #000000
+skinparam ArrowColor #000000
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #000000
+skinparam ActivityDiamondFontSize 13
+skinparam ActivityDiamondWidth 120
+skinparam ActivityDiamondHeight 160
+skinparam SwimlaneTitleBackgroundColor #FFFFFF
+skinparam SwimlaneTitleFontColor #000000
+
+title Aktivitas: Melihat Analisis RFM
+
+|Pengguna|
+start
+:Marketing membuka menu
+Analisis RFM;
+
+|Sistem|
+:Mengambil data transaksi
+penawaran dan proyek;
+:Menghitung skor
+Recency, Frequency, Monetary;
+:Menentukan segment customer;
+:Menampilkan ringkasan segment
+dan tabel customer;
+if (Data tersedia?) then (Ya)
+  |Pengguna|
+  :Melihat daftar segment
+  dan tabel customer;
+  :Memasukkan kata kunci
+  atau memilih filter segment;
+  |Sistem|
+  :Menampilkan hasil
+  filter dan pencarian;
+  |Pengguna|
+  :Meninjau hasil analisis;
+  stop
+else (Kosong)
+  |Sistem|
+  :Menampilkan pesan
+  "Tidak ada data customer";
+  stop
+endif
+@enduml

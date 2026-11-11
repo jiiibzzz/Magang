@@ -1,0 +1,22 @@
+@startuml
+actor Customer
+boundary View
+control Controller
+entity Model
+database Database
+Customer -> View : Membuka menu riwayat transaksi
+View -> Controller : GET /riwayat-transaksi
+Controller -> Model : daftarTransaksi()
+Model -> Database : SELECT penawaran dan proyek customer
+Database --> Model : data transaksi
+Model --> Controller : data gabungan
+Controller --> View : 200 daftar riwayat transaksi
+View --> Customer : Menampilkan tabel riwayat transaksi
+Customer -> View : Mengubah filter / halaman
+View -> Controller : GET /riwayat-transaksi?filter
+Controller -> Model : daftarTransaksi()
+Model -> Database : SELECT data terfilter
+Database --> Model : data terfilter
+Controller --> View : 200 data terfilter
+View --> Customer : Menampilkan hasil terbaru
+@enduml

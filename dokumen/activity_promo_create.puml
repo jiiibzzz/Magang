@@ -1,0 +1,69 @@
+@startuml
+skinparam dpi 180
+skinparam activityMinimumWidth 160
+skinparam activityPadding 18
+skinparam nodesep 100
+skinparam ranksep 160
+skinparam defaultFontSize 13
+skinparam activityFontSize 13
+skinparam activityBorderThickness 1
+skinparam ArrowThickness 2
+skinparam SwimlaneBorderColor #000000
+skinparam SwimlaneBorderThickness 2
+skinparam partitionBorderColor #000000
+skinparam partitionBorderThickness 2
+skinparam partitionBackgroundColor #FFFFFF
+skinparam BackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityBorderColor #000000
+skinparam ActivityStartColor #000000
+skinparam ActivityEndColor #000000
+skinparam ArrowColor #000000
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #000000
+skinparam ActivityDiamondFontSize 13
+skinparam ActivityDiamondWidth 120
+skinparam ActivityDiamondHeight 160
+skinparam SwimlaneTitleBackgroundColor #FFFFFF
+skinparam SwimlaneTitleFontColor #000000
+
+title Aktivitas: Membuat Promo Campaign
+
+|Pengguna|
+start
+if (Datang dari Analisis RFM?) then (Ya)
+  |Sistem|
+  :Membuka form campaign
+  dengan penerima terpilih;
+  |Pengguna|
+  :Melanjutkan pengisian form;
+else (Tidak)
+  :Klik tombol "Buat Campaign";
+  |Sistem|
+  :Menampilkan form campaign;
+  |Pengguna|
+  :Mengisi judul, pesan,
+  dan dokumen opsional;
+  :Memilih penerima customer;
+endif
+:Klik tombol "Simpan Draft";
+
+|Sistem|
+if (Judul, pesan, dan
+minimal 1 penerima valid?) then (Ya)
+  :Menyimpan campaign
+  sebagai draft;
+  :Menampilkan pesan sukses;
+  :Memuat ulang daftar campaign;
+  |Pengguna|
+  :Melihat campaign draft
+  di daftar campaign;
+  stop
+else (Tidak)
+  :Menampilkan pesan error
+  validasi;
+  |Pengguna|
+  :Memperbaiki data pada form;
+  stop
+endif
+@enduml

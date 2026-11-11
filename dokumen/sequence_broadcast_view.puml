@@ -1,0 +1,22 @@
+@startuml
+actor Marketing
+boundary View
+control Controller
+entity Model
+database Database
+Marketing -> View : Buka menu Broadcast Maintenance
+View -> Controller : GET /admin/broadcast-maintenance
+Controller -> Model : daftarBroadcast()
+Model -> Database : SELECT daftar broadcast
+Database --> Model : data broadcast
+Model --> Controller : data daftar
+Controller --> View : 200 daftar broadcast
+View --> Marketing : Menampilkan daftar broadcast
+Marketing -> View : Memasukkan kata kunci pencarian
+View -> Controller : GET /admin/broadcast-maintenance?search=
+Controller -> Model : daftarBroadcast()
+Model -> Database : SELECT broadcast terfilter
+Database --> Model : data terfilter
+Controller --> View : 200 hasil pencarian
+View --> Marketing : Menampilkan hasil pencarian
+@enduml

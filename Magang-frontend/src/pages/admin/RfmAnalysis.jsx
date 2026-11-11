@@ -2,14 +2,20 @@ import { useState, useEffect } from 'react'
 import api from '../../api/axios'
 import { useNavigate } from 'react-router-dom'
 import Toast from '../../components/Toast'
+import { formatRupiah } from '../../utils/format'
 
 const SEGMENT_CONFIG = {
   'Champions': { color: 'bg-emerald-500', desc: 'Customer terbaik — baru, sering, spending tinggi' },
-  'Loyal': { color: 'bg-blue-500', desc: 'Sering beli, spending bagus' },
-  'Potential Loyalist': { color: 'bg-cyan-500', desc: 'Baru-baru ini beli, frekuensi sedang' },
-  'At Risk': { color: 'bg-amber-500', desc: 'Mulai menjauh, perlu re-engage' },
-  'Hibernating': { color: 'bg-red-500', desc: 'Lama tidak beli, perlu win-back' },
-  'Others': { color: 'bg-gray-400', desc: 'Segment lainnya' },
+  'Loyal Customers': { color: 'bg-blue-500', desc: 'Sering bertransaksi, nilai transaksi bagus' },
+  'Promising': { color: 'bg-teal-500', desc: 'Baru bertransaksi beberapa kali, potensi berkembang' },
+  'New': { color: 'bg-cyan-500', desc: 'Pelanggan baru, transaksi pertama' },
+  'Abandoned Checkouts': { color: 'bg-amber-400', desc: 'Mengajukan order tapi belum ada kesepakatan nilai' },
+  'Warm Leads Cold Leads': { color: 'bg-orange-400', desc: 'Interaksi mulai mendingin / menurun' },
+  'Need Attention': { color: 'bg-amber-500', desc: 'Di atas rata-rata tapi mulai melambat' },
+  'based on past purchases': { color: 'bg-indigo-500', desc: 'Nilai transaksi masa lalu tinggi, potensi besar' },
+  "Shouldn't Lose": { color: 'bg-rose-500', desc: 'Pelanggan bernilai tinggi yang hampir hilang' },
+  'Sleepers': { color: 'bg-purple-500', desc: 'Lama tidak aktif, frekuensi dan nilai rendah' },
+  'Lost': { color: 'bg-slate-500', desc: 'Sudah sangat lama tidak aktif dan nilai minim' },
 }
 
 export default function RfmAnalysis() {
@@ -28,11 +34,6 @@ export default function RfmAnalysis() {
     setToast({ msg, type })
     setShowToast(true)
     setTimeout(() => setShowToast(false), 3000)
-  }
-
-  const formatRupiah = (val) => {
-    if (!val) return 'Rp 0'
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val)
   }
 
   const fetchRfm = () => {
@@ -110,9 +111,9 @@ export default function RfmAnalysis() {
       </div>
 
       {!loading && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
           {segmentsSummary.map(seg => {
-            const cfg = SEGMENT_CONFIG[seg.segment] || SEGMENT_CONFIG['Others']
+            const cfg = SEGMENT_CONFIG[seg.segment] || { color: 'bg-gray-400', desc: 'Segment pelanggan' }
             const segIds = customers.filter(c => c.segment === seg.segment).map(c => c.customer_id)
             const allSelected = segIds.length > 0 && segIds.every(id => selected.includes(id))
             return (
@@ -192,7 +193,7 @@ export default function RfmAnalysis() {
                 </tr>
               ) : (
                 filtered.map(c => {
-                  const cfg = SEGMENT_CONFIG[c.segment] || SEGMENT_CONFIG['Others']
+                  const cfg = SEGMENT_CONFIG[c.segment] || { color: 'bg-gray-400', desc: 'Segment pelanggan' }
                   return (
                     <tr key={c.customer_id} className="hover:bg-base-100/50 transition-colors">
                       <td>
@@ -215,7 +216,7 @@ export default function RfmAnalysis() {
                       <td className="text-center text-xs">{c.frequency}x</td>
                       <td className="text-right font-bold text-sm text-primary">{formatRupiah(c.monetary)}</td>
                       <td className="text-center">
-                        <span className={`badge ${cfg.color} text-white border-0 font-semibold text-[10px] rounded-md px-2 py-0.5`}>
+                        <span className={`badge ${cfg.color} text-white border-0 font-semibold text-[10px] rounded-full px-2 py-0.5`}>
                           {c.segment}
                         </span>
                       </td>

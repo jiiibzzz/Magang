@@ -1,0 +1,25 @@
+@startuml
+actor Marketing
+boundary View
+control Controller
+entity Model
+database Database
+Marketing -> View : Klik tombol "Buat Campaign"
+View --> Marketing : Menampilkan form campaign
+Marketing -> View : Mengisi judul, pesan, dokumen
+Marketing -> View : Memilih penerima customer
+Marketing -> View : Klik tombol "Simpan Draft"
+View -> Controller : POST /admin/promo-campaigns
+Controller -> Model : buatCampaign()
+Model -> Database : INSERT campaign draft
+Database --> Model : campaign tersimpan
+Model --> Controller : campaign baru
+Controller --> View : 201 campaign berhasil dibuat
+View --> Marketing : Menampilkan pesan sukses
+View -> Controller : GET /admin/promo-campaigns
+Controller -> Model : daftarCampaign()
+Model -> Database : SELECT daftar campaign
+Database --> Model : data campaign
+Controller --> View : 200 daftar campaign
+View --> Marketing : Menampilkan campaign draft di daftar
+@enduml

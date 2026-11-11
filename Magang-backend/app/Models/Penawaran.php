@@ -14,6 +14,7 @@ class Penawaran extends Model
     protected $fillable = [
         'marketing_id',
         'customer_id',
+        'proyek_id',
         'produk_id',
         'layanan_id',
         'judul',
@@ -32,6 +33,11 @@ class Penawaran extends Model
     public function proyek()
     {
         return $this->hasOne(Proyek::class, 'penawaran_id');
+    }
+
+    public function proyekTerkait()
+    {
+        return $this->belongsTo(Proyek::class, 'proyek_id');
     }
 
     public function marketing()

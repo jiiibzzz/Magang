@@ -9,8 +9,8 @@ skinparam classHeaderBackgroundColor #D9E2F3
 skinparam classFontColor #111111
 skinparam ArrowColor #333333
 skinparam nodesep 8
-skinparam ranksep 18
-skinparam dpi 220
+skinparam ranksep 16
+skinparam dpi 200
 skinparam defaultFontSize 10
 skinparam entityFontSize 10
 skinparam entityAttributeFontSize 9
@@ -42,6 +42,8 @@ entity permissions {
   --
   name : VARCHAR
   guard_name : VARCHAR
+  modul : VARCHAR
+  panel : VARCHAR
 }
 
 entity model_has_roles {
@@ -87,6 +89,7 @@ entity penawarans {
   * id : BIGINT <<PK>>
   marketing_id : BIGINT <<FK>>
   customer_id : BIGINT <<FK>>
+  proyek_id : BIGINT <<FK>>
   produk_id : BIGINT <<FK>>
   layanan_id : BIGINT <<FK>>
   --
@@ -95,18 +98,24 @@ entity penawarans {
   harga : DECIMAL
   brosur_path : VARCHAR
   status : ENUM
+  tanggal_deal : TIMESTAMP
 }
 
 entity proyeks {
   * id : BIGINT <<PK>>
   penawaran_id : BIGINT <<FK>>
+  chat_session_id : BIGINT <<FK>>
   customer_id : BIGINT <<FK>>
   layanan_id : BIGINT <<FK>>
   --
   nama_proyek : VARCHAR
   deskripsi_kebutuhan : TEXT
+  harga_kontrak : DECIMAL
+  harga_tawaran : DECIMAL
+  alasan_tawaran : TEXT
   progress : INT
-  status_proyek : ENUM
+  status_proyek : VARCHAR
+  alasan_penolakan : TEXT
   tanggal_mulai : DATE
   tanggal_selesai : DATE
   timeline : JSON
@@ -118,6 +127,7 @@ entity chat_sessions {
   customer_id : BIGINT <<FK>>
   marketing_id : BIGINT <<FK>>
   product_id : BIGINT <<FK>>
+  layanan_id : BIGINT <<FK>>
   --
   status : ENUM
 }
@@ -140,6 +150,55 @@ entity chat_files {
   file_path : VARCHAR
   file_name : VARCHAR
   keterangan : VARCHAR
+}
+
+entity promo_campaigns {
+  * id : BIGINT <<PK>>
+  dibuat_oleh : BIGINT <<FK>>
+  --
+  judul : VARCHAR
+  pesan : TEXT
+  dokumen_path : VARCHAR
+  segment_target : JSON
+  customer_ids : JSON
+  total_penerima : INT
+  status : VARCHAR
+}
+
+entity promo_logs {
+  * id : BIGINT <<PK>>
+  campaign_id : BIGINT <<FK>>
+  customer_id : BIGINT <<FK>>
+  --
+  nomor_wa : VARCHAR
+  status_kirim : VARCHAR
+  response_fonnte : TEXT
+}
+
+entity broadcast_maintenances {
+  * id : BIGINT <<PK>>
+  dibuat_oleh : BIGINT <<FK>>
+  proyek_id : BIGINT <<FK>>
+  --
+  judul : VARCHAR
+  pesan : TEXT
+  jenis : VARCHAR
+  target : VARCHAR
+  aktif_dari : TIMESTAMP
+  aktif_sampai : TIMESTAMP
+  is_active : BOOLEAN
+  total_penerima : INT
+  status : VARCHAR
+  kanal : VARCHAR
+  is_published_web : BOOLEAN
+}
+
+entity broadcast_reads {
+  * id : BIGINT <<PK>>
+  broadcast_id : BIGINT <<FK>>
+  user_id : BIGINT <<FK>>
+  --
+  read_at : TIMESTAMP
 }
 
 entity kategori_artikel {
@@ -218,6 +277,7 @@ entity pengaturan_situs {
 
 entity client_logos {
   * id : BIGINT <<PK>>
+  dibuat_oleh : BIGINT <<FK>>
   --
   nama_perusahaan : VARCHAR
   logo_path : VARCHAR
@@ -226,35 +286,55 @@ entity client_logos {
 
 entity keunggulans {
   * id : BIGINT <<PK>>
+  dibuat_oleh : BIGINT <<FK>>
   --
   judul : VARCHAR
   deskripsi : TEXT
   icon : VARCHAR
+  urutan : INT
 }
 
-' Relasi utama dan foreign key
+' Relasi otorisasi
 users ||--o{ model_has_roles : model_id
 roles ||--o{ model_has_roles : role_id
 roles ||--o{ role_has_permissions : role_id
 permissions ||--o{ role_has_permissions : permission_id
 
+' Relasi katalog layanan
 kategori_layanan ||--o{ layanan : id_kategori_layanan
+
+' Relasi CRM & transaksi
 users ||--o{ penawarans : marketing_id
 users ||--o{ penawarans : customer_id
 produks ||--o{ penawarans : produk_id
 layanan ||--o{ penawarans : layanan_id
+proyeks ||--o{ penawarans : proyek_id
 penawarans ||--o{ proyeks : penawaran_id
 users ||--o{ proyeks : customer_id
 layanan ||--o{ proyeks : layanan_id
+chat_sessions ||--o{ proyeks : chat_session_id
 
 users ||--o{ chat_sessions : customer_id
 users ||--o{ chat_sessions : marketing_id
 produks ||--o{ chat_sessions : product_id
+layanan ||--o{ chat_sessions : layanan_id
 chat_sessions ||--o{ chat_messages : chat_session_id
 users ||--o{ chat_messages : sender_id
 chat_sessions ||--o{ chat_files : chat_session_id
 users ||--o{ chat_files : uploader_id
 
+' Relasi pemasaran
+users ||--o{ promo_campaigns : dibuat_oleh
+promo_campaigns ||--o{ promo_logs : campaign_id
+users ||--o{ promo_logs : customer_id
+
+' Relasi notifikasi & broadcast
+users ||--o{ broadcast_maintenances : dibuat_oleh
+proyeks ||--o{ broadcast_maintenances : proyek_id
+broadcast_maintenances ||--o{ broadcast_reads : broadcast_id
+users ||--o{ broadcast_reads : user_id
+
+' Relasi konten & pengaturan
 kategori_artikel ||--o{ artikel : id_kategori_artikel
 users ||--o{ artikel : id_penulis
 users ||--o{ testimoni : id_user
@@ -263,12 +343,10 @@ users ||--o{ faq : dibuat_oleh
 users ||--o{ pesan_kontak : id_user
 users ||--o{ pelanggan_newsletter : id_user
 users ||--o{ pengaturan_situs : diubah_oleh
+users ||--o{ client_logos : dibuat_oleh
+users ||--o{ keunggulans : dibuat_oleh
 
-' Relasi konseptual pengelolaan konten
-users ||..o{ client_logos : mengelola
-users ||..o{ keunggulans : mengelola
-
-' Constraint layout: tiga kolom terkontrol untuk satu halaman Word
+' Constraint layout: tiga kolom terkontrol
 users -[hidden]down- roles
 roles -[hidden]down- permissions
 permissions -[hidden]down- model_has_roles
@@ -281,6 +359,10 @@ penawarans -[hidden]down- proyeks
 proyeks -[hidden]down- chat_sessions
 chat_sessions -[hidden]down- chat_messages
 chat_messages -[hidden]down- chat_files
+chat_files -[hidden]down- promo_campaigns
+promo_campaigns -[hidden]down- promo_logs
+promo_logs -[hidden]down- broadcast_maintenances
+broadcast_maintenances -[hidden]down- broadcast_reads
 
 kategori_artikel -[hidden]down- artikel
 artikel -[hidden]down- testimoni
@@ -295,5 +377,4 @@ client_logos -[hidden]down- keunggulans
 ' Kolom kiri, tengah, kanan
 users -[hidden]right- kategori_layanan
 kategori_layanan -[hidden]right- kategori_artikel
-
 @enduml

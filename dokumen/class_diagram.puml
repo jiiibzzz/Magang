@@ -8,8 +8,8 @@ skinparam classHeaderBackgroundColor white
 skinparam arrowColor black
 skinparam linetype ortho
 skinparam classAttributeIconSize 0
-skinparam nodesep 18
-skinparam ranksep 28
+skinparam nodesep 20
+skinparam ranksep 26
 skinparam dpi 130
 hide empty methods
 
@@ -108,11 +108,14 @@ package "CRM" {
     id: int
     marketing_id: int
     customer_id: int
+    proyek_id: int
     produk_id: int
     layanan_id: int
     judul: string
     harga: decimal
+    brosur_path: string
     status: string
+    tanggal_deal: datetime
     --
     +index()
     +store()
@@ -124,33 +127,48 @@ package "CRM" {
     +customer()
     +produk()
     +layanan()
+    +proyekTerkait()
   }
   class Proyek {
     id: int
     penawaran_id: int
+    chat_session_id: int
     customer_id: int
     layanan_id: int
     nama_proyek: string
     deskripsi_kebutuhan: text
+    harga_kontrak: decimal
+    harga_tawaran: decimal
+    alasan_tawaran: text
     progress: int
     status_proyek: string
+    alasan_penolakan: text
+    tanggal_mulai: date
+    tanggal_selesai: date
+    timeline: array
+    dokumentasi: array
     --
     +index()
     +store()
     +show()
     +update()
+    +validasi()
+    +konfirmasiHarga()
+    +validasiNegosiasi()
     +uploadDokumentasi()
     +deleteDokumentasi()
     +destroy()
     +penawaran()
     +customer()
     +layanan()
+    +chatSession()
   }
   class ChatSession {
     id: int
     customer_id: int
     marketing_id: int
     product_id: int
+    layanan_id: int
     status: string
     --
     +index()
@@ -162,14 +180,17 @@ package "CRM" {
     +customer()
     +marketing()
     +product()
+    +layanan()
     +messages()
     +files()
+    +proyeks()
   }
   class ChatMessage {
     id: int
     chat_session_id: int
     sender_id: int
     message: text
+    is_edited: boolean
     is_read: boolean
     --
     +sendMessage()
@@ -194,7 +215,91 @@ package "CRM" {
   }
 }
 
+package "Pemasaran & Notifikasi" {
+  class PromoCampaign {
+    id: int
+    dibuat_oleh: int
+    judul: string
+    pesan: text
+    dokumen_path: string
+    segment_target: array
+    customer_ids: array
+    total_penerima: int
+    status: string
+    --
+    +index()
+    +store()
+    +show()
+    +send()
+    +destroy()
+    +pembuat()
+    +logs()
+  }
+  class PromoLog {
+    id: int
+    campaign_id: int
+    customer_id: int
+    nomor_wa: string
+    status_kirim: string
+    response_fonnte: text
+    --
+    +campaign()
+    +customer()
+  }
+  class BroadcastMaintenance {
+    id: int
+    dibuat_oleh: int
+    proyek_id: int
+    judul: string
+    pesan: text
+    jenis: string
+    target: string
+    aktif_dari: datetime
+    aktif_sampai: datetime
+    is_active: boolean
+    total_penerima: int
+    status: string
+    kanal: string
+    is_published_web: boolean
+    --
+    +index()
+    +store()
+    +show()
+    +update()
+    +publish()
+    +unpublish()
+    +send()
+    +active()
+    +destroy()
+    +pembuat()
+    +proyek()
+    +reads()
+  }
+  class BroadcastRead {
+    id: int
+    broadcast_id: int
+    user_id: int
+    read_at: datetime
+    --
+    +broadcast()
+    +user()
+  }
+}
+
 package "Konten & Pengaturan" {
+  class ClientLogo {
+    id: int
+    dibuat_oleh: int
+    nama_perusahaan: string
+    logo_path: string
+    --
+    +index()
+    +store()
+    +show()
+    +update()
+    +destroy()
+    +pembuat()
+  }
   class KategoriArtikel {
     id_kategori_artikel: int
     nama_kategori: string
@@ -211,6 +316,7 @@ package "Konten & Pengaturan" {
     id_penulis: int
     judul: string
     status: string
+    dipublikasikan_pada: datetime
     --
     +index()
     +store()
@@ -224,20 +330,39 @@ package "Konten & Pengaturan" {
     id_testimoni: int
     id_user: int
     nama_klien: string
+    jabatan: string
     rating: int
+    status: string
     --
     +index()
     +store()
     +update()
     +setStatus()
+    +approveAll()
     +destroy()
     +user()
+  }
+  class Keunggulan {
+    id: int
+    dibuat_oleh: int
+    judul: string
+    deskripsi: text
+    icon: string
+    urutan: int
+    --
+    +index()
+    +store()
+    +show()
+    +update()
+    +destroy()
+    +pembuat()
   }
   class AnggotaTim {
     id: int
     dibuat_oleh: int
     nama: string
     jabatan: string
+    foto: string
     --
     +index()
     +store()
@@ -250,6 +375,7 @@ package "Konten & Pengaturan" {
     id: int
     dibuat_oleh: int
     pertanyaan: string
+    jawaban: text
     --
     +index()
     +store()
@@ -276,6 +402,7 @@ package "Konten & Pengaturan" {
     id: int
     id_user: int
     email: string
+    status: string
     --
     +index()
     +subscribe()
@@ -295,18 +422,6 @@ package "Konten & Pengaturan" {
     +bulkUpdate()
     +pengubah()
   }
-  class ClientLogo {
-    id: int
-    nama_perusahaan: string
-    logo_path: string
-    --
-    +index()
-    +store()
-    +show()
-    +update()
-    +destroy()
-    +pembuat()
-  }
 }
 
 ' Relasi otorisasi
@@ -323,40 +438,66 @@ User "1" -- "0..*" Penawaran : customer
 User "1" -- "0..*" Penawaran : marketing
 Produk "1" -- "0..*" Penawaran
 Layanan "1" -- "0..*" Penawaran
-Penawaran "1" -- "0..*" Proyek
+Penawaran "0..1" -- "0..1" Proyek
 User "1" -- "0..*" Proyek : customer
 Layanan "1" -- "0..*" Proyek
+ChatSession "0..1" -- "0..*" Proyek
 User "1" -- "0..*" ChatSession : customer
 User "1" -- "0..*" ChatSession : marketing
 Produk "1" -- "0..*" ChatSession
+Layanan "1" -- "0..*" ChatSession
 ChatSession "1" -- "0..*" ChatMessage
 ChatSession "1" -- "0..*" ChatFile
 User "1" -- "0..*" ChatMessage : sender
 User "1" -- "0..*" ChatFile : uploader
 
+' Relasi Pemasaran & Notifikasi
+User "1" -- "0..*" PromoCampaign : pembuat
+PromoCampaign "1" -- "0..*" PromoLog
+User "1" -- "0..*" PromoLog : customer
+User "1" -- "0..*" BroadcastMaintenance : pembuat
+Proyek "0..1" -- "0..*" BroadcastMaintenance
+BroadcastMaintenance "1" -- "0..*" BroadcastRead
+User "1" -- "0..*" BroadcastRead : user
+
 ' Relasi konten
 KategoriArtikel "1" -- "0..*" Artikel
 User "1" -- "0..*" Artikel : penulis
 User "1" -- "0..*" Testimoni
+User "1" -- "0..*" Keunggulan : pembuat
 User "1" -- "0..*" AnggotaTim
 User "1" -- "0..*" Faq
 User "1" -- "0..*" PesanKontak
 User "1" -- "0..*" PelangganNewsletter
 User "1" -- "0..*" PengaturanSitus
+User "1" -- "0..*" ClientLogo
 
-' Susunan visual seperti versi sebelumnya
+' Susunan visual alami (Otorisasi di kiri, Katalog & CRM & Pemasaran di tengah, Konten di kanan)
 Role -[hidden]right- Permission
 ModelHasRole -[hidden]down- RoleHasPermission
-KategoriLayanan -[hidden]right- KategoriArtikel
-Layanan -[hidden]right- Artikel
-Produk -[hidden]right- Testimoni
+
+KategoriLayanan -[hidden]right- ClientLogo
+Layanan -[hidden]right- KategoriArtikel
+Produk -[hidden]right- Artikel
+
 Penawaran -[hidden]down- Proyek
 Proyek -[hidden]down- ChatSession
 ChatSession -[hidden]right- ChatMessage
 ChatMessage -[hidden]right- ChatFile
+
+ChatSession -[hidden]down- PromoCampaign
+Proyek -[hidden]down- BroadcastMaintenance
+PromoCampaign -[hidden]right- BroadcastMaintenance
+PromoCampaign -[hidden]down- PromoLog
+BroadcastMaintenance -[hidden]down- BroadcastRead
+
+' Konten & Pengaturan (2 sub-kolom agar tinggi seimbang)
+ClientLogo -[hidden]down- KategoriArtikel
 KategoriArtikel -[hidden]down- Artikel
 Artikel -[hidden]down- Testimoni
-Testimoni -[hidden]down- AnggotaTim
+Testimoni -[hidden]down- Keunggulan
+
+ClientLogo -[hidden]right- AnggotaTim
 AnggotaTim -[hidden]down- Faq
 Faq -[hidden]down- PesanKontak
 PesanKontak -[hidden]down- PelangganNewsletter

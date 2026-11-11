@@ -1,0 +1,21 @@
+@startuml
+actor Marketing
+boundary View
+control Controller
+entity Model
+database Database
+Marketing -> View : Klik "Publish" / "Unpublish"
+View --> Marketing : Menampilkan dialog konfirmasi
+Marketing -> View : Mengonfirmasi aksi
+View -> Controller : POST /admin/broadcast-maintenance/{id}/publish
+Controller -> Model : publikasikanBroadcast()
+Model -> Database : SELECT dan UPDATE status
+alt Status mengizinkan aksi
+ Database --> Model : status diperbarui
+ Model --> Controller : broadcast diperbarui
+ Controller --> View : 200 pesan sukses
+else Status tidak mengizinkan
+ Controller --> View : 422 pesan error
+end
+View --> Marketing : Menampilkan hasil aksi
+@enduml

@@ -1,0 +1,20 @@
+@startuml
+actor Marketing
+boundary View
+control Controller
+entity Model
+database Database
+Marketing -> View : Klik tombol "Detail" pada campaign
+View -> Controller : GET /admin/promo-campaigns/{id}
+Controller -> Model : detailCampaign()
+Model -> Database : SELECT campaign dan logs
+Database --> Model : data campaign dan log
+Model --> Controller : campaign beserta logs
+Controller --> View : 200 detail campaign
+View --> Marketing : Menampilkan modal detail campaign
+alt Campaign pernah dikirim
+ Marketing -> View : Melihat log pengiriman per customer
+else Campaign belum dikirim
+ Marketing -> View : Menutup modal detail
+end
+@enduml

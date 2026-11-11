@@ -1,0 +1,21 @@
+@startuml
+actor Marketing
+boundary View
+control Controller
+entity Model
+database Database
+Marketing -> View : Klik tombol "Edit" pada broadcast
+View -> Controller : GET /admin/broadcast-maintenance/{id}
+Controller -> Model : detailBroadcast()
+Model -> Database : SELECT data broadcast
+Database --> Model : data broadcast
+Controller --> View : 200 detail broadcast
+View --> Marketing : Menampilkan form edit dengan data lama
+Marketing -> View : Mengubah data lalu klik "Simpan"
+View -> Controller : PUT /admin/broadcast-maintenance/{id}
+Controller -> Model : perbaruiBroadcast()
+Model -> Database : UPDATE broadcast
+Database --> Model : data diperbarui
+Controller --> View : 200 broadcast diperbarui
+View --> Marketing : Menampilkan pesan sukses
+@enduml

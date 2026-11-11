@@ -1,0 +1,16 @@
+@startuml
+actor Marketing
+boundary View
+control Controller
+entity Model
+database Database
+Marketing -> View : Klik tombol "Hapus" pada broadcast
+View --> Marketing : Menampilkan dialog konfirmasi
+Marketing -> View : Mengonfirmasi penghapusan
+View -> Controller : DELETE /admin/broadcast-maintenance/{id}
+Controller -> Model : hapusBroadcast()
+Model -> Database : DELETE broadcast
+Database --> Model : broadcast terhapus
+Controller --> View : 200 broadcast berhasil dihapus
+View --> Marketing : Menampilkan pesan sukses dan daftar terbaru
+@enduml

@@ -1,0 +1,17 @@
+@startuml
+actor Marketing
+boundary View
+control Controller
+entity Model
+database Database
+Marketing -> View : Klik tombol "Tambah Broadcast"
+View --> Marketing : Menampilkan form broadcast
+Marketing -> View : Mengisi form lalu klik "Simpan"
+View -> Controller : POST /admin/broadcast-maintenance
+Controller -> Model : buatBroadcast()
+Model -> Database : INSERT broadcast
+Database --> Model : broadcast tersimpan
+Model --> Controller : broadcast baru
+Controller --> View : 201 broadcast berhasil dibuat
+View --> Marketing : Menampilkan pesan sukses
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+actor Marketing
+boundary View
+control Controller
+entity Model
+database Database
+Marketing -> View : Buka menu Promo Campaign
+View -> Controller : GET /admin/promo-campaigns
+Controller -> Model : daftarCampaign()
+Model -> Database : SELECT daftar campaign
+Database --> Model : data campaign
+Model --> Controller : data daftar
+Controller --> View : 200 daftar campaign
+View --> Marketing : Menampilkan daftar campaign
+Marketing -> View : Memasukkan kata kunci pencarian
+View -> Controller : GET /admin/promo-campaigns?search=
+Controller -> Model : daftarCampaign()
+Model -> Database : SELECT campaign terfilter
+Database --> Model : data terfilter
+Controller --> View : 200 hasil pencarian
+View --> Marketing : Menampilkan hasil pencarian
+Marketing -> View : Mengganti halaman daftar
+View -> Controller : GET /admin/promo-campaigns?page=
+Controller -> Model : daftarCampaign()
+Model -> Database : SELECT campaign halaman berikutnya
+Database --> Model : data halaman
+Controller --> View : 200 halaman campaign
+View --> Marketing : Menampilkan halaman campaign berikutnya
+@enduml
