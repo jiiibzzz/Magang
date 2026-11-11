@@ -211,6 +211,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/chats/{id}/messages', [ChatController::class, 'sendMessage']);
     Route::post('/chats/{id}/files', [ChatController::class, 'uploadFile']);
 
+    Route::post('/chats/{id}/claim', [ChatController::class, 'claimChat']);
     Route::put('/chats/{id}/status', [ChatController::class, 'updateStatus']);
     Route::put('/chats/{id}/messages/{messageId}', [ChatController::class, 'updateMessage']);
     Route::delete('/chats/{id}/messages/{messageId}', [ChatController::class, 'deleteMessage']);

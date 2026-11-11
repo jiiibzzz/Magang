@@ -143,9 +143,10 @@ class PublicContentController extends Controller
 
     public function onlineMarketings()
     {
-        // Gunakan timezone UTC karena database menyimpan timestamps dalam UTC secara default
+        // last_seen ditulis dengan now() (timezone aplikasi, Asia/Jakarta) oleh ProfileController::ping,
+        // jadi pembandingnya juga harus memakai timezone aplikasi.
         $marketings = \App\Models\User::role('marketing')
-            ->where('last_seen', '>=', now('UTC')->subMinutes(3))
+            ->where('last_seen', '>=', now()->subMinutes(3))
             ->get(['id', 'name', 'avatar', 'email']);
 
         return response()->json($marketings);

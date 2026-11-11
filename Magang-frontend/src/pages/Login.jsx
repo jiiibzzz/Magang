@@ -98,11 +98,29 @@ export default function Login() {
       .catch(err => console.error(err))
   }, [])
 
+  // Marketing yang dipilih dari tombol "Konsultasi Gratis" sebelum login.
+  const startChatWith = location.state?.startChatWith || null
+
   useEffect(() => {
-    if (user) {
+    // Saat ada konsultasi tertunda, navigasi ditangani lanjutkanSetelahMasuk().
+    if (user && !startChatWith) {
       navigate('/admin', { replace: true })
     }
-  }, [user, navigate])
+  }, [user, navigate, startChatWith])
+
+  const lanjutkanSetelahMasuk = async (akun) => {
+    const isCustomer = akun?.roles?.some((r) => r.name === 'customer') ?? true
+    if (startChatWith && isCustomer) {
+      try {
+        const res = await api.post('/chats', { marketing_id: startChatWith })
+        navigate('/admin/chat', { replace: true, state: { activeChatId: res.data.id } })
+        return
+      } catch (err) {
+        console.error('Gagal memulai konsultasi setelah login', err)
+      }
+    }
+    navigate('/admin', { replace: true })
+  }
 
   const switchTo = (t) => {
     setTab(t); setError(''); setRegErrors({})
@@ -119,10 +137,17 @@ export default function Login() {
     }
   }, [])
 
+  // Bedakan server mati/tidak terjangkau dari kredensial yang memang salah.
+  const pesanError = (err, fallback) => {
+    if (!err.response) return 'Tidak dapat terhubung ke server. Pastikan backend (php artisan serve) sedang berjalan.'
+    if (err.response.status >= 500) return 'Terjadi kesalahan di server. Silakan coba lagi.'
+    return err.response.data?.message || fallback
+  }
+
   const handleLogin = async (e) => {
     e.preventDefault(); setError(''); setLoading(true)
     try { 
-      await login(email, password)
+      const data = await login(email, password)
       if (rememberMe) {
         localStorage.setItem('remember_email', email)
         localStorage.setItem('remember_password', password)
@@ -130,21 +155,21 @@ export default function Login() {
         localStorage.removeItem('remember_email')
         localStorage.removeItem('remember_password')
       }
-      navigate('/admin')
+      await lanjutkanSetelahMasuk(data?.user)
     }
-    catch (err) { setError(err.response?.data?.message || 'Email atau kata sandi salah.') }
+    catch (err) { setError(pesanError(err, 'Email atau kata sandi salah.')) }
     finally { setLoading(false) }
   }
 
   const handleRegister = async (e) => {
     e.preventDefault(); setError(''); setRegErrors({}); setLoading(true)
     try { 
-      await register(regName, regEmail, regPhone, regPw, regCf)
-      navigate('/admin')
+      const data = await register(regName, regEmail, regPhone, regPw, regCf)
+      await lanjutkanSetelahMasuk(data?.user)
     }
     catch (err) {
       if (err.response?.status === 422) setRegErrors(err.response.data.errors || {})
-      else setError(err.response?.data?.message || 'Pendaftaran gagal.')
+      else setError(pesanError(err, 'Pendaftaran gagal.'))
     }
     finally { setLoading(false) }
   }

@@ -3,12 +3,14 @@ import { useSearchParams } from 'react-router-dom'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
 import Toast from '../../components/Toast'
+import { useConfirmModal } from '../../components/ConfirmModal'
 import { formatRupiah } from '../../utils/format'
 
 export default function Penawaran() {
   const { user, hasPermission } = useAuth()
   const isMarketing = hasPermission('kelola_penawaran')
   const isCustomer = user?.roles?.some(role => role.name === 'customer')
+  const { confirm, ModalComponent: ConfirmDialog } = useConfirmModal()
   const [searchParams] = useSearchParams()
   const prefillProyekId = searchParams.get('proyek_id') || ''
   const prefillCustomerId = searchParams.get('customer_id') || ''
@@ -194,20 +196,32 @@ export default function Penawaran() {
     }
   }
 
-  const handleUpdateStatus = async (id, status) => {
-    if (!window.confirm(`Apakah Anda yakin ingin ${status === 'diterima' ? 'menyetujui' : 'menolak'} penawaran ini?`)) return
-    try {
-      await api.put(`/penawaran/${id}/status`, { status })
-      showToastMsg(`Penawaran telah ${status === 'diterima' ? 'disetujui' : 'ditolak'}.`)
-      fetchPenawarans()
-    } catch (err) {
-      console.error(err)
-      showToastMsg(err.response?.data?.message || 'Gagal memproses penawaran.', 'error')
-    }
+  // Konfirmasi memakai modal internal: window.confirm bisa diblokir di sebagian browser/webview
+  // sehingga langsung bernilai false dan request tidak pernah terkirim.
+  const handleUpdateStatus = (id, status) => {
+    const terima = status === 'diterima'
+    confirm(
+      `Apakah Anda yakin ingin ${terima ? 'menyetujui' : 'menolak'} penawaran ini?`,
+      async () => {
+        try {
+          await api.put(`/penawaran/${id}/status`, { status })
+          showToastMsg(`Penawaran telah ${terima ? 'disetujui' : 'ditolak'}.`)
+          fetchPenawarans()
+        } catch (err) {
+          console.error(err)
+          showToastMsg(err.response?.data?.message || 'Gagal memproses penawaran.', 'error')
+        }
+      },
+      terima ? 'Terima Penawaran' : 'Tolak Penawaran',
+      { confirmLabel: terima ? 'Terima' : 'Tolak', tone: terima ? 'success' : 'danger' },
+    )
   }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus penawaran ini?')) return
+  const handleDelete = (id) => {
+    confirm('Apakah Anda yakin ingin menghapus penawaran ini?', () => hapusPenawaran(id), 'Hapus Penawaran')
+  }
+
+  const hapusPenawaran = async (id) => {
     try {
       await api.delete(`/penawaran/${id}`)
       showToastMsg('Penawaran berhasil dihapus.')
@@ -220,6 +234,7 @@ export default function Penawaran() {
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog />
       <Toast show={showToast && !!toast} type={toast?.type === 'error' ? 'error' : 'success'} message={toast?.msg} onClose={() => setShowToast(false)} />
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

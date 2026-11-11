@@ -179,6 +179,12 @@ class ChatController extends Controller
         }
 
         $session = ChatSession::findOrFail($id);
+
+        if ($session->marketing_id) {
+            $pemegang = (int) $session->marketing_id === (int) $user->id ? 'Anda' : ($session->marketing?->name ?? 'marketing lain');
+            return response()->json(['message' => 'Obrolan ini sudah diklaim oleh ' . $pemegang . '.'], 409);
+        }
+
         $session->update([
             'marketing_id' => $user->id,
             'status' => 'Ditindaklanjuti', // Otomatis ke Ditindaklanjuti saat diklaim

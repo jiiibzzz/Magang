@@ -192,6 +192,23 @@ export default function ChatCenter() {
     }, 'Hapus Topik Konsultasi')
   }
 
+  // Marketing mengambil alih chat yang belum punya marketing (mis. dari tombol Konsultasi layanan/produk)
+  const [claiming, setClaiming] = useState(false)
+  const handleClaim = async () => {
+    if (!activeSession || isCustomer || claiming) return
+    setClaiming(true)
+    try {
+      const res = await api.post(`/chats/${activeSession.id}/claim`)
+      fetchSessions(res.data.id)
+    } catch (err) {
+      console.error(err)
+      alert(err.response?.data?.message || 'Gagal mengklaim obrolan.')
+      fetchSessions(activeSession.id)
+    } finally {
+      setClaiming(false)
+    }
+  }
+
   const handleUpdateStatus = async (status) => {
     if (!activeSession || isCustomer) return
     try {
@@ -454,6 +471,20 @@ export default function ChatCenter() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                {!isCustomer && !activeSession.marketing_id && (
+                  <button
+                    onClick={handleClaim}
+                    disabled={claiming}
+                    className="btn btn-xs bg-primary hover:opacity-90 text-white border-none rounded-lg font-bold px-3"
+                    title="Ambil alih obrolan ini sebagai marketing penanggung jawab"
+                  >
+                    {claiming && <span className="loading loading-spinner loading-xs"></span>}
+                    Klaim Chat
+                  </button>
+                )}
+                {!isCustomer && activeSession.marketing && (
+                  <span className="text-[10px] font-bold text-base-content/50 hidden sm:inline">PIC: {activeSession.marketing.name}</span>
+                )}
                 {!showDocsSidebar && (
                   <button
                     onClick={() => setShowDocsSidebar(true)}
