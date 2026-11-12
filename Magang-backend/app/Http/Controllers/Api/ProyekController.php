@@ -101,6 +101,10 @@ class ProyekController extends Controller
             'timeline' => 'nullable|array',
         ]);
 
+        if ($pesan = $this->cekTransisiStatus($proyek->status_proyek, $request->status_proyek)) {
+            return response()->json(['message' => $pesan], 422);
+        }
+
         $data = $request->only('nama_proyek', 'deskripsi_kebutuhan', 'progress', 'status_proyek', 'alasan_penolakan', 'tanggal_mulai', 'tanggal_selesai');
 
         if (in_array($request->status_proyek, ['Selesai', 'Arsip']) && empty($data['tanggal_selesai']) && empty($proyek->tanggal_selesai)) {
@@ -130,6 +134,38 @@ class ProyekController extends Controller
         $proyek->update($data);
 
         return response()->json($proyek->load(['penawaran', 'customer', 'layanan', 'chatSession']));
+    }
+
+    /** Tahapan yang hanya bisa dicapai setelah kesepakatan negosiasi tercapai. */
+    public const STATUS_PASCA_KESEPAKATAN = ['Proses Pengerjaan', 'Selesai', 'Maintenance', 'Arsip'];
+
+    /**
+     * Status sebelum kesepakatan (pengajuan, negosiasi, ditolak) hanya boleh berubah lewat
+     * validasi pengajuan dan modul negosiasi. Ubah status manual hanya berlaku di antara
+     * tahapan pasca-kesepakatan.
+     *
+     * @return string|null pesan error, atau null bila transisi diizinkan
+     */
+    private function cekTransisiStatus(?string $lama, string $baru): ?string
+    {
+        if ($lama === $baru) {
+            return null;
+        }
+
+        if (!in_array($lama, self::STATUS_PASCA_KESEPAKATAN, true)) {
+            return match ($lama) {
+                'pengajuan' => 'Proyek masih berstatus pengajuan. Terima pengajuan untuk membuka sesi negosiasi terlebih dahulu.',
+                'negosiasi' => 'Proyek sedang dalam negosiasi. Status berubah otomatis setelah kesepakatan tercapai di menu Negosiasi.',
+                'ditolak' => 'Proyek yang ditolak tidak dapat dilanjutkan ke tahap pengerjaan.',
+                default => 'Status "' . $lama . '" tidak dapat diubah secara manual.',
+            };
+        }
+
+        if (!in_array($baru, self::STATUS_PASCA_KESEPAKATAN, true)) {
+            return 'Proyek yang sudah disepakati tidak dapat dikembalikan ke status "' . $baru . '".';
+        }
+
+        return null;
     }
 
     public function validasi(Request $request, $id)

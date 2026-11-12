@@ -6,6 +6,10 @@ import AjukanProyek from './AjukanProyek'
 import Toast from '../../components/Toast'
 import { formatRupiah } from '../../utils/format'
 
+// Tahapan yang hanya bisa dicapai setelah kesepakatan negosiasi (lihat ProyekController::cekTransisiStatus)
+const STATUS_PASCA_KESEPAKATAN = ['Proses Pengerjaan', 'Selesai', 'Maintenance', 'Arsip']
+const sudahDisepakati = (status) => STATUS_PASCA_KESEPAKATAN.includes(status)
+
 export default function Proyek() {
   const { user, hasPermission } = useAuth()
   const navigate = useNavigate()
@@ -111,18 +115,25 @@ export default function Proyek() {
     }
   }
 
-  // Handle update status tahapan via stepper
+  // Handle update status tahapan via stepper.
+  // Status manual hanya boleh berpindah di antara tahapan pasca-kesepakatan (sama dengan aturan backend).
   const handleUpdateStatusStepper = async (newStatus) => {
     if (!activeProyek) return
 
-    // Status 'pengajuan', 'ditawarkan', dan 'negosiasi' memiliki alur & validasi khusus
-    if (newStatus === 'pengajuan') {
-      showToast('Status "pengajuan" adalah status awal brief dari customer.', 'error')
+    if (!sudahDisepakati(activeProyek.status_proyek)) {
+      showToast(
+        activeProyek.status_proyek === 'negosiasi'
+          ? 'Proyek sedang dinegosiasikan. Status berubah otomatis setelah kesepakatan tercapai di menu Negosiasi.'
+          : activeProyek.status_proyek === 'pengajuan'
+          ? 'Terima pengajuan terlebih dahulu untuk membuka sesi negosiasi.'
+          : 'Status proyek ini tidak dapat diubah secara manual.',
+        'error'
+      )
       return
     }
 
-    if (newStatus === 'negosiasi') {
-      showToast('Status "negosiasi" dibuka otomatis saat pengajuan diterima dan dikelola di menu Negosiasi.', 'error')
+    if (!sudahDisepakati(newStatus)) {
+      showToast(`Proyek yang sudah disepakati tidak dapat dikembalikan ke "${newStatus}".`, 'error')
       return
     }
 
@@ -514,7 +525,7 @@ export default function Proyek() {
                   </span>
 
                   {/* Dropdown Ubah Status Terintegrasi pada Header Stepper (Marketing & Admin) */}
-                  {isMarketingOrAdmin && (
+                  {isMarketingOrAdmin && sudahDisepakati(activeProyek.status_proyek) && (
                     <div className="dropdown dropdown-end">
                       <div tabIndex={0} role="button" className="btn btn-xs rounded-full border px-3 text-[10px] font-bold h-7 flex items-center gap-1.5 shadow-xs bg-white hover:bg-base-100 border-base-300">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -529,7 +540,7 @@ export default function Proyek() {
                         <li className="menu-title px-2.5 py-1 text-[9px] font-extrabold uppercase text-base-content/40">
                           Pilih Tahapan Progres
                         </li>
-                        {['pengajuan', 'negosiasi', 'Proses Pengerjaan', 'Selesai', 'Maintenance', 'Arsip'].map((st) => (
+                        {STATUS_PASCA_KESEPAKATAN.map((st) => (
                           <li key={st}>
                             <button
                               type="button"
@@ -594,27 +605,28 @@ export default function Proyek() {
                         {stages.map((st, idx) => {
                           const active = !isUnderReview && !isRejected && curIdx >= 0 && idx <= curIdx;
                           const isCurrent = !isUnderReview && !isRejected && idx === curIdx;
-                          
+                          const bisaDiklik = isMarketingOrAdmin && sudahDisepakati(activeProyek.status_proyek) && sudahDisepakati(st);
+
                           return (
                             <button
                               key={st}
                               type="button"
-                              disabled={!isMarketingOrAdmin}
+                              disabled={!bisaDiklik}
                               onClick={() => {
-                                if (isMarketingOrAdmin && activeProyek.status_proyek !== st) {
+                                if (bisaDiklik && activeProyek.status_proyek !== st) {
                                   handleUpdateStatusStepper(st)
                                 }
                               }}
-                              title={isMarketingOrAdmin ? `Klik untuk ubah tahapan ke "${st}"` : st}
+                              title={bisaDiklik ? `Klik untuk ubah tahapan ke "${st}"` : st}
                               className={`flex flex-col items-center gap-2 group/dot relative w-24 transition-all focus:outline-none ${
-                                isMarketingOrAdmin ? 'cursor-pointer hover:-translate-y-0.5' : 'cursor-default'
+                                bisaDiklik ? 'cursor-pointer hover:-translate-y-0.5' : 'cursor-default'
                               }`}
                             >
                               <div 
                                 className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 shadow-xs shrink-0 ${
                                   active 
-                                    ? 'bg-emerald-500 text-white scale-110 ring-4 ring-emerald-500/20' 
-                                    : isMarketingOrAdmin
+                                    ? 'bg-emerald-500 text-white scale-110 ring-4 ring-emerald-500/20'
+                                    : bisaDiklik
                                     ? 'bg-white text-base-content/40 border-2 border-base-300 group-hover/dot:border-primary group-hover/dot:text-primary group-hover/dot:shadow-sm'
                                     : 'bg-white text-base-content/30 border-2 border-base-300'
                                 }`}
@@ -645,7 +657,9 @@ export default function Proyek() {
                     </div>
                     {isMarketingOrAdmin && (
                       <p className="text-[10px] text-base-content/40 italic text-center select-none pt-1">
-                        Tip: Klik bulatan tahapan pada alur di atas atau gunakan tombol "Ubah Status" untuk memperbarui progres proyek.
+                        {sudahDisepakati(activeProyek.status_proyek)
+                          ? 'Tip: Klik bulatan tahapan pada alur di atas atau gunakan tombol "Ubah Status" untuk memperbarui progres proyek.'
+                          : 'Tahap pengajuan & negosiasi berjalan lewat validasi pengajuan dan menu Negosiasi. Ubah status manual tersedia setelah kesepakatan tercapai.'}
                       </p>
                     )}
                   </div>

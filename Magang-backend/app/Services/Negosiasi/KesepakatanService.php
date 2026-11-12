@@ -128,6 +128,7 @@ class KesepakatanService
             'perusahaan' => [
                 'nama' => $setting('nama_perusahaan', config('app.name')),
                 'alamat' => $setting('alamat', '-'),
+                'telepon' => $setting('no_telp', '-'),
             ],
             'proyek' => [
                 'id' => $sesi->proyek->id,
